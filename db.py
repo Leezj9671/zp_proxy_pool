@@ -1,4 +1,3 @@
-import redis
 import logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -6,10 +5,13 @@ logging.basicConfig(level=logging.INFO,
                     filename='./logs/redis_logger.log',
                     filemode='a')
 
-from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM
+import redis
+
+from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME
+
 
 class RedisClient():
-    def __init__(self, setname, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM):
+    def __init__(self, setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM):
         """
         initial connection
         :param key:
@@ -18,23 +20,32 @@ class RedisClient():
         self.setname = setname
         self.__conn = redis.Redis(host=host, port=port, db=dbnum)
 
-    def saveOne(self, ip):
+    def save(self, *ip):
         """
         save an ip
         """
-        if self.__conn.sadd(self.setname, ip):
-            pass
-        else:
-            logging.error('IP {} save failed.'.format(ip))
+        try:
+            if self.__conn.sadd(self.setname, *ip):
+                pass
+            else:
+                logging.error('IP {} save failed.'.format(ip))
+        except Exception as e:
+            logging.error('IP {} save failed: {}'.format(ip, e))
 
-    def remove(self, ip):
+    def remove(self, *ip):
         """
         remove an ip
         """
-        if self.__conn.srem(self.setname, ip):
+        if self.__conn.srem(self.setname, *ip):
             pass
         else:
             logging.error('IP {} delete fialed.'.format(ip))
+
+    def pop(self):
+        """
+        pop an ip
+        """
+        return self.__conn.spop(self.setname).decode('utf-8')
 
     def get(self):
         """
@@ -56,20 +67,29 @@ class RedisClient():
 
     @property
     def size(self):
+        """
+        return key's size
+        """
         return self.__conn.scard(self.setname)
 
 
 def main():
-    r = RedisClient(setname='proxies')
-    # r.saveOne('lasttest')
+    r = RedisClient(setname="test1")
+    print(r.getAll())
+    lst = [i for i in range(10)]
+    r.save(*lst)
+    print(r.getAll())
+    # print(r.pop())
     # print(r.getAll())
     # print(r.size)
     # print(r.get())
-    # print(r.getN(2))
+    # print(r.getN(20))
     # r.remove('lasttest')
-    # print(r.getAll())
+    r.remove(*lst)
+    print(r.getAll())
+
+    # print(r.size)
 
 
 if __name__ == '__main__':
     main()
-
