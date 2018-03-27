@@ -11,6 +11,11 @@ from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS
 
 
 class RedisClient():
+    """
+    Redis Client
+    default:
+    setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM
+    """
     def __init__(self, setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM):
         """
         initial connection
@@ -22,7 +27,7 @@ class RedisClient():
 
     def save(self, *ip):
         """
-        save an ip
+        save an ip or some ip
         """
         try:
             if self.__conn.sadd(self.setname, *ip):
@@ -34,7 +39,7 @@ class RedisClient():
 
     def remove(self, *ip):
         """
-        remove an ip
+        remove an ip or some ip
         """
         if self.__conn.srem(self.setname, *ip):
             pass
@@ -59,11 +64,17 @@ class RedisClient():
         """
         return list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.srandmember(self.setname, number=num))))
 
-    def getAll(self):
+    def get_all(self):
         """
         return all ips
         """
         return list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.smembers(self.setname))))
+
+    def delete_all(self):
+        """
+        delete all ips
+        """
+        self.__conn.flushall()
 
     @property
     def size(self):
@@ -74,19 +85,20 @@ class RedisClient():
 
 
 def main():
-    r = RedisClient(setname="test1")
-    print(r.getAll())
-    lst = [i for i in range(10)]
-    r.save(*lst)
-    print(r.getAll())
+    r = RedisClient(setname=REDIS_RAW_SET_NAME)
+    # print(r.getAll())
+    # lst = [i for i in range(10)]
+    # lst = 'test'
+    # r.save(lst)
+    # print(r.getAll())
     # print(r.pop())
     # print(r.getAll())
     # print(r.size)
     # print(r.get())
     # print(r.getN(20))
     # r.remove('lasttest')
-    r.remove(*lst)
-    print(r.getAll())
+    # r.remove(*lst)
+    print(r.getN(20))
 
     # print(r.size)
 
