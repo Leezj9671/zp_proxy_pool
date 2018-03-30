@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO,
 
 import redis
 
-from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME
+from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
 
 
 class RedisClient():
@@ -16,14 +16,14 @@ class RedisClient():
     default:
     setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM
     """
-    def __init__(self, setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM):
+    def __init__(self, setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM, pwd=REDIS_PASSWORD):
         """
         initial connection
         :param key:
         :return:
         """
         self.setname = setname
-        self.__conn = redis.Redis(host=host, port=port, db=dbnum)
+        self.__conn = redis.Redis(host=host, port=port, db=dbnum, password=pwd)
 
     def save(self, *ip):
         """
@@ -33,7 +33,7 @@ class RedisClient():
             if self.__conn.sadd(self.setname, *ip):
                 pass
             else:
-                logging.error('IP {} save failed.'.format(ip))
+                logging.error('IP {} save failed. Already exists'.format(ip))
         except Exception as e:
             logging.error('IP {} save failed: {}'.format(ip, e))
 
@@ -41,6 +41,8 @@ class RedisClient():
         """
         remove an ip or some ip
         """
+        if not ip:
+            return
         if self.__conn.srem(self.setname, *ip):
             pass
         else:
@@ -84,7 +86,7 @@ class RedisClient():
         return self.__conn.scard(self.setname)
 
 
-def main():
+if __name__ == '__main__':
     r = RedisClient(setname=REDIS_RAW_SET_NAME)
     # print(r.getAll())
     # lst = [i for i in range(10)]
@@ -101,7 +103,3 @@ def main():
     print(r.getN(20))
 
     # print(r.size)
-
-
-if __name__ == '__main__':
-    main()
