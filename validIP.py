@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO, filename='./logs/IPfailed.log')
 
 from threading import Thread
 import time
-import concurrent.futures
+from  concurrent.futures import ThreadPoolExecutor
 
 import requests
 
@@ -77,7 +77,7 @@ class CheckIP():
         if not iplist:
             iplist = self.raw_redis_cli.get_all()
         start_time_1 = time.clock()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=CHECK_MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=CHECK_MAX_WORKERS) as executor:
             for ip in iplist:
                 executor.submit(self._check_ip, ip)
         print("Check thread pool execution in " + str(time.clock() - start_time_1) + " seconds")
@@ -91,8 +91,6 @@ if __name__ == '__main__':
     b = RedisClient(REDIS_RAW_SET_NAME)
     c = RedisClient(REDIS_VALID_SET_NAME)
     print('raw:{}  valid:{}'.format(b.size, c.size))
-    # b.save('test')
-    # b.save('http://123.209.89.91')
     check = CheckIP(from_db=REDIS_RAW_SET_NAME, to_db=REDIS_VALID_SET_NAME)
     check.threads_check_ip()
     print('raw:{}  valid:{}'.format(b.size, c.size))
