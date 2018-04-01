@@ -25,28 +25,33 @@ class RedisClient():
         self.setname = setname
         self.__conn = redis.Redis(host=host, port=port, db=dbnum, password=pwd)
 
-    def save(self, *ip):
+    def save(self, ip):
         """
         save an ip or some ip
         """
         try:
-            if self.__conn.sadd(self.setname, *ip):
-                pass
+            if isinstance(ip, list):
+                self.__conn.sadd(self.setname, *ip)
+            elif isinstance(ip, str):
+                self.__conn.sadd(self.setname, ip)
             else:
-                logging.error('IP {} save failed. Already exists'.format(ip))
+                raise "ip is wrong type"
         except Exception as e:
             logging.error('IP {} save failed: {}'.format(ip, e))
 
-    def remove(self, *ip):
+    def remove(self, ip):
         """
         remove an ip or some ip
         """
-        if not ip:
-            return
-        if self.__conn.srem(self.setname, *ip):
-            pass
-        else:
-            logging.error('IP {} delete fialed.'.format(ip))
+        try:
+            if isinstance(ip, list):
+                self.__conn.srem(self.setname, *ip)
+            elif isinstance(ip, str):
+                self.__conn.srem(self.setname, ip)
+            else:
+                raise "ip is wrong type"
+        except Exception as e:
+            logging.error('IP {} remove failed: {}'.format(ip, e))
 
     def pop(self):
         """
@@ -89,17 +94,17 @@ class RedisClient():
 if __name__ == '__main__':
     r = RedisClient(setname=REDIS_RAW_SET_NAME)
     # print(r.getAll())
-    # lst = [i for i in range(10)]
-    # lst = 'test'
-    # r.save(lst)
-    # print(r.getAll())
-    # print(r.pop())
-    # print(r.getAll())
-    # print(r.size)
-    # print(r.get())
-    # print(r.getN(20))
-    # r.remove('lasttest')
-    # r.remove(*lst)
-    print(r.getN(20))
-
+    lst = [i for i in range(10)]
+    print(r.get_all())
+    r.save(lst)
+    print(r.get_all())
+    lst = 'test'
+    r.save(lst)
+    print(r.get_all())
+    lst = [i for i in range(10)]    
+    r.remove(lst)
+    print(r.get_all())
+    lst = 'test'
+    r.remove(lst)
+    print(r.get_all())
     # print(r.size)

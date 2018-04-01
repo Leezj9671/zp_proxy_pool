@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO, filename='./logs/IPfailed.log')
 
 from threading import Thread
 import time
-from  concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
@@ -54,7 +54,7 @@ class CheckIP():
             else:
                 print('[!]{} is bad. Usedtime {:.2f}s'.format(curl, endtime - starttime))
                 self.wasted_proxy.append(curl)
-        except:
+        except Exception as e:
             print('[!]{} is bad. Exception occured.  Usedtime {:.2f}s'.format(curl, time.clock() - starttime))
             self.wasted_proxy.append(curl)
 
@@ -76,13 +76,16 @@ class CheckIP():
         self._update_local_ip()
         if not iplist:
             iplist = self.raw_redis_cli.get_all()
+        if self.raw_redis_cli.size == 0:
+            print('no proxy')
+            return
         start_time_1 = time.clock()
         with ThreadPoolExecutor(max_workers=CHECK_MAX_WORKERS) as executor:
             for ip in iplist:
                 executor.submit(self._check_ip, ip)
-        print("Check thread pool execution in " + str(time.clock() - start_time_1) + " seconds")
-        self.raw_redis_cli.remove(*self.wasted_proxy)
-        self.valid_redis_cli.save(*self.valid_proxypool)
+        print("Check thread pool execution in {:.4f} seconds".format(time.clock() - start_time_1))
+        self.raw_redis_cli.remove(self.wasted_proxy + self.valid_proxypool)
+        self.valid_redis_cli.save(self.valid_proxypool)
         self.valid_proxypool.clear()
         self.wasted_proxy.clear()
 
