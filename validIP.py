@@ -49,13 +49,13 @@ class CheckIP():
             endtime = time.clock()
             if retip.text != self.local_ip:
                 # self.valid_redis_cli.save(curl)
-                print('[√]{} is ok. Usedtime {:.2f}s'.format(curl, endtime - starttime))
+                # print('[√]{} is ok. Usedtime {:.2f}s'.format(curl, endtime - starttime))
                 self.valid_proxypool.append(curl)
             else:
-                print('[!]{} is bad. Usedtime {:.2f}s'.format(curl, endtime - starttime))
+                # print('[!]{} is bad. Usedtime {:.2f}s'.format(curl, endtime - starttime))
                 self.wasted_proxy.append(curl)
         except Exception as e:
-            print('[!]{} is bad. Exception occured.  Usedtime {:.2f}s'.format(curl, time.clock() - starttime))
+            # print('[!]{} is bad. Exception occured.  Usedtime {:.2f}s'.format(curl, time.clock() - starttime))
             self.wasted_proxy.append(curl)
 
     def _update_local_ip(self):
@@ -68,7 +68,7 @@ class CheckIP():
             logging.error('Can not access check IP:{}'.format(self.check_url))
             self.local_ip = None
 
-    def threads_check_ip(self, iplist=None):
+    def threads_check_ip(self, iplist=None, threads_num=CHECK_MAX_WORKERS):
         '''
         启用多线程验证ip，移除无效代理
         iplist: <list> 待检查ip列表
@@ -80,10 +80,10 @@ class CheckIP():
             print('no proxy')
             return
         start_time_1 = time.clock()
-        with ThreadPoolExecutor(max_workers=CHECK_MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=threads_num) as executor:
             for ip in iplist:
                 executor.submit(self._check_ip, ip)
-        print("Check thread pool execution in {:.4f} seconds".format(time.clock() - start_time_1))
+        # print("Check thread pool execution in {:.4f} seconds".format(time.clock() - start_time_1))
         self.raw_redis_cli.remove(self.wasted_proxy + self.valid_proxypool)
         self.valid_redis_cli.save(self.valid_proxypool)
         self.valid_proxypool.clear()

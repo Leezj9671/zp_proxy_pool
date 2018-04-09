@@ -21,6 +21,7 @@ headers = {
 
 class SpiderMeta(type):
     spiders = []
+    rediscli = RedisClient()
 
     def _init(cls):
         pass
@@ -37,8 +38,7 @@ class SpiderMeta(type):
         return type.__new__(cls, *args, **kwargs)
 
     def _save_to_db(cls, ip_list):
-        rediscli = RedisClient()
-        rediscli.save(ip_list)
+        SpiderMeta.rediscli.save(ip_list)
 
     def _get_html(cls, url):
         r = requests.get(url, headers=headers)
@@ -63,7 +63,6 @@ class Daili66Spider(metaclass=SpiderMeta):
                 alltd = proxy.find_all('td')
                 ip_list.append('http://{}:{}'.format(alltd[0].string, alltd[1].string))
         self.save_to_db(ip_list)
-        # return ip_list
 
 
 class KuaidailiSpider(metaclass=SpiderMeta):
@@ -81,7 +80,6 @@ class KuaidailiSpider(metaclass=SpiderMeta):
             for proxy in proxy_list.find_all('tr'):
                 alltd = proxy.find_all('td')
                 ip_list.append('{}://{}:{}'.format(alltd[3].string.lower(), alltd[0].string, alltd[1].string.lower()))
-        # return ip_list
         self.save_to_db(ip_list)
 
 
