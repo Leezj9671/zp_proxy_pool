@@ -31,7 +31,10 @@ class RedisClient():
         """
         try:
             if isinstance(ip, list):
-                self.__conn.sadd(self.setname, *ip)
+                if ip is None:
+                    raise "No ip in list"
+                else:
+                    self.__conn.sadd(self.setname, *ip)
             elif isinstance(ip, str):
                 self.__conn.sadd(self.setname, ip)
             else:

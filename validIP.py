@@ -1,6 +1,6 @@
 """
 1. Print改为logger
-2. 
+2. 一次性获取IP过多问题
 """
 
 
@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-from conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, CHECK_TIMES, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
+from conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
 from db import RedisClient
 
 
@@ -62,11 +62,13 @@ class CheckIP():
         '''
         更新锚点IP
         '''
-        try:
-            self.local_ip = requests.get(self.check_url).text
-        except:
-            logging.error('Can not access check IP:{}'.format(self.check_url))
-            self.local_ip = None
+        while True:
+            try:
+                self.local_ip = requests.get(self.check_url).text
+            except:
+                logging.error('Can not access check IP:{}, try again...'.format(self.check_url))
+            else:
+                break
 
     def threads_check_ip(self, iplist=None, threads_num=CHECK_MAX_WORKERS):
         '''
@@ -77,13 +79,11 @@ class CheckIP():
         if not iplist:
             iplist = self.raw_redis_cli.get_all()
         if self.raw_redis_cli.size == 0:
-            print('no proxy')
             return
         start_time_1 = time.clock()
         with ThreadPoolExecutor(max_workers=threads_num) as executor:
             for ip in iplist:
                 executor.submit(self._check_ip, ip)
-        # print("Check thread pool execution in {:.4f} seconds".format(time.clock() - start_time_1))
         self.raw_redis_cli.remove(self.wasted_proxy + self.valid_proxypool)
         self.valid_redis_cli.save(self.valid_proxypool)
         self.valid_proxypool.clear()
