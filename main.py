@@ -58,6 +58,6 @@ def api_run():
 if __name__ == '__main__':
     with ProcessPoolExecutor(max_workers=3) as executor:
         # executor.submit(api_run)
-        executor.submit(crawl_ip_process)
-        # executor.submit(raw_ip_process)
-        # executor.submit(valid_ip_process)
+        # executor.submit(crawl_ip_process)
+        executor.submit(raw_ip_process)
+        executor.submit(valid_ip_process)

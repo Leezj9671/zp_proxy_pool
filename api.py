@@ -10,9 +10,13 @@ rediscli = RedisClient(setname=REDIS_VALID_SET_NAME)
 def getOne():
     return rediscli.get()
 
+@app.route('/getall', methods=['GET'])
+def getAll():
+    return str('\n'.join(rediscli.get_all()))
+
 @app.route('/count', methods=['GET'])
 def count():
     return str(rediscli.size)
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

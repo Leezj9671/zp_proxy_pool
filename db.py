@@ -72,7 +72,11 @@ class RedisClient():
         """
         return n ip
         """
-        return list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.srandmember(self.setname, number=num))))
+        try:
+            iplist = list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.srandmember(self.setname, number=num))))
+        except:
+            iplist = []
+        return iplist
 
     def get_all(self):
         """
@@ -110,4 +114,4 @@ if __name__ == '__main__':
     lst = 'test'
     r.remove(lst)
     print(r.get_all())
-    # print(r.size)
+    print(r.size)
