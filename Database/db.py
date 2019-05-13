@@ -80,7 +80,11 @@ class RedisClient():
         """
         return n ip
         """
-        return list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.srandmember(self.setname, number=num))))
+        try:
+            iplist = list(map(lambda ip: ip.decode('utf-8'), list(self.__conn.srandmember(self.setname, number=num))))
+        except:
+            iplist = []
+        return iplist
 
     def get_all(self):
         """
@@ -103,22 +107,19 @@ class RedisClient():
 
 
 if __name__ == '__main__':
-    #测试
-    # r = RedisClient(setname=REDIS_RAW_SET_NAME)
-    r = RedisClient(setname=REDIS_VALID_SET_NAME)
-    # lst = [i for i in range(10)]
-    # print(r.get_all())
-    for i in r.get_all():
-        print(i)
-    # r.save(lst)
-    # print(r.get_all())
-    # lst = 'test'
-    # r.save(lst)
-    # print(r.get_all())
-    # lst = [i for i in range(10)]
-    # r.remove(lst)
-    # print(r.get_all())
-    # lst = 'test'
-    # r.remove(lst)
-    # print(r.get_all())
-    # print(r.size)
+    r = RedisClient(setname=REDIS_RAW_SET_NAME)
+    # print(r.getAll())
+    lst = [i for i in range(10)]
+    print(r.get_all())
+    r.save(lst)
+    print(r.get_all())
+    lst = 'test'
+    r.save(lst)
+    print(r.get_all())
+    lst = [i for i in range(10)]
+    r.remove(lst)
+    print(r.get_all())
+    lst = 'test'
+    r.remove(lst)
+    print(r.get_all())
+    print(r.size)
