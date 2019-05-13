@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO,
 
 import redis
 
-from conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
+from Config.conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
 
 
 class RedisClient():
@@ -16,14 +16,22 @@ class RedisClient():
     default:
     setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM
     """
-    def __init__(self, setname=REDIS_RAW_SET_NAME, host=REDIS_HOST, port=REDIS_PORT, dbnum=REDIS_DB_NUM, pwd=REDIS_PASSWORD):
+    def __init__(self,
+                 setname=REDIS_RAW_SET_NAME, 
+                 host=REDIS_HOST, 
+                 port=REDIS_PORT, 
+                 dbnum=REDIS_DB_NUM, 
+                 pwd=REDIS_PASSWORD):
         """
         initial connection
         :param key:
         :return:
         """
         self.setname = setname
-        self.__conn = redis.Redis(host=host, port=port, db=dbnum, password=pwd)
+        self.__conn = redis.Redis(host=host,
+                                  port=port,
+                                  db=dbnum,
+                                  password=pwd)
 
     def save(self, ip):
         """
@@ -95,19 +103,22 @@ class RedisClient():
 
 
 if __name__ == '__main__':
-    r = RedisClient(setname=REDIS_RAW_SET_NAME)
-    # print(r.getAll())
-    lst = [i for i in range(10)]
-    print(r.get_all())
-    r.save(lst)
-    print(r.get_all())
-    lst = 'test'
-    r.save(lst)
-    print(r.get_all())
-    lst = [i for i in range(10)]    
-    r.remove(lst)
-    print(r.get_all())
-    lst = 'test'
-    r.remove(lst)
-    print(r.get_all())
+    #测试
+    # r = RedisClient(setname=REDIS_RAW_SET_NAME)
+    r = RedisClient(setname=REDIS_VALID_SET_NAME)
+    # lst = [i for i in range(10)]
+    # print(r.get_all())
+    for i in r.get_all():
+        print(i)
+    # r.save(lst)
+    # print(r.get_all())
+    # lst = 'test'
+    # r.save(lst)
+    # print(r.get_all())
+    # lst = [i for i in range(10)]
+    # r.remove(lst)
+    # print(r.get_all())
+    # lst = 'test'
+    # r.remove(lst)
+    # print(r.get_all())
     # print(r.size)

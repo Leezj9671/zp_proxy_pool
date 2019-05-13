@@ -12,13 +12,14 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
+from lxml import etree
+from fake_useragent import UserAgent
 
-from db import RedisClient
+from Database.db import RedisClient
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
-}
 
+#Fake Useragent
+ua = UserAgent()
 
 
 class SpiderMeta(type):
@@ -44,6 +45,9 @@ class SpiderMeta(type):
         SpiderMeta.rediscli.save(ip_list)
 
     def _get_html(cls, url):
+        headers = {
+            'User-Agent': ua.random
+        }
         r = requests.get(url, headers=headers)
         try:
             soup = BeautifulSoup(r.content.decode("utf-8"), 'lxml')
@@ -53,9 +57,9 @@ class SpiderMeta(type):
 
     # def _log_decorator(cls, func):
     #     def wrapper():
-    #         start_time = time.clock()
+    #         start_time = time.perf_counter()
     #         func()
-    #         logging.info('Crawled 66daili success in {}seconds, got crawled ip {}'.format(time.clock()-start_time, len(ip_list)))
+    #         logging.info('Crawled 66daili success in {}seconds, got crawled ip {}'.format(time.perf_counter()-start_time, len(ip_list)))
     #     return wrapper
 
 class Daili66Spider(metaclass=SpiderMeta):
@@ -71,8 +75,9 @@ class Daili66Spider(metaclass=SpiderMeta):
             for proxy in proxy_list.find_all('tr')[1:]:
                 alltd = proxy.find_all('td')
                 ip_list.append('http://{}:{}'.format(alltd[0].string, alltd[1].string))
+                ip_list.append('https://{}:{}'.format(alltd[0].string, alltd[1].string))
         logging.info('Crawled 66daili success, got crawled ip {}'.format(len(ip_list)))
-        self.save_to_db(ip_list)
+        self.save_to_db(all_ip_list)
 
 
 class KuaidailiSpider(metaclass=SpiderMeta):
@@ -98,8 +103,8 @@ class XiciSpider(metaclass=SpiderMeta):
     """
 
     def getip(self, page_num=10):
-        urls = ['http://www.xicidaili.com/nn/{}'.format(i) for i in range(1, page_num+1)]
-        urls.extend(['http://www.xicidaili.com/nt/{}'.format(i) for i in range(1, page_num+1)])
+        urls = ['https://www.xicidaili.com/nn/{}'.format(i) for i in range(1, page_num+1)]
+        urls.extend(['https://www.xicidaili.com/nt/{}'.format(i) for i in range(1, page_num+1)])
         ip_list = []
         for url in urls:
             time.sleep(1)
@@ -122,18 +127,65 @@ class IP89Spider(metaclass=SpiderMeta):
 
     def getip(self, page_num=None):
         # 随机个数取IP，否则可能被ban
-        url = 'http://www.89ip.cn/tiqv.php?tqsl={}'.format(randint(490, 510))
-        # url = 'http://www.89ip.cn/tiqv.php?tqsl={}'.format(randint(1,10))
-        try:
-            text = requests.get(url, headers=headers).text
+        all_ip_list = []
+        arealist = ['美国', '日本', '俄罗斯', '英国', '澳大利亚']
+        for area in arealist:
+            area_encode = requests.urllib3.util.parse_url(area)
+            url = 'http://www.89ip.cn/tqdl.html?api=1&num={}&port=&address={}&isp='.format(randint(490, 510), area_encode)
+            headers = {
+                'User-Agent': ua.random
+            }
+            try:
+                text = requests.get(url, headers=headers, timeout=10).text
+            except:
+                logging.error('89IP Can not get table: {}'.format(url))
+                return None
             all_ip = re.findall('(?<![\.\d])(?:\d{1,3}\.){3}\d{1,3}\:\d{1,5}', text)
-        except:
-            logging.error('Can not get table: {}'.format(url))
-            return None
-        
-        ip_list = list(map(lambda ip:'http://'+ip, all_ip))
-        logging.info('Crawled 89daili success, got crawled ip {}'.format(len(ip_list)))
+            all_ip_list.extend(list(map(lambda ip:'http://'+ip, all_ip)))
+            all_ip_list.extend(list(map(lambda ip:'https://'+ip, all_ip)))
+            all_ip_list.extend(list(map(lambda ip:'socks5h://'+ip, all_ip)))
+            time.sleep(3)
+        # print(all_ip_list)
+        logging.info('Crawled 89daili success, got crawled ip {}'.format(len(all_ip_list)))
+        self.save_to_db(all_ip_list)
+
+class FineProxySpider(metaclass=SpiderMeta):
+    '''
+    Fineproxy
+    http://fineproxy.org/eng/fresh-proxies
+    '''
+
+    def getip(self, page_num=None):
+        url = 'http://fineproxy.org/eng/fresh-proxies'
+        all_ip_list = []
+        page_html = requests.get(url, headers={'User-Agent':ua.random}, timeout=10).text
+        page_html.replace('<strong><font style="vertical-align: inherit;">：</font></strong>', ':')
+        page_html.replace('。', '.')
+        all_ip = re.findall('(?<![\.\d])(?:\d{1,3}\.){3}\d{1,3}\:\d{1,5}', page_html)
+        all_ip_list.extend(list(map(lambda ip:'http://'+ip, all_ip)))
+        all_ip_list.extend(list(map(lambda ip:'https://'+ip, all_ip)))
+        all_ip_list.extend(list(map(lambda ip:'socks5h://'+ip, all_ip)))
+        logging.info('Crawled FineProxy success, got crawled ip {}'.format(len(all_ip_list)))
+        self.save_to_db(all_ip_list)
+
+
+class QyProxySpider(metaclass=SpiderMeta):
+    start_url = 'http://www.qydaili.com/free/?action=&page={}'
+
+    def getip(self, page_num=15):
+        urls = [self.start_url.format(i) for i in range(1, page_num+1)]
+        ip_list = []
+        for url in urls:
+            time.sleep(1)
+            soup = self.get_html(url)
+            proxy_list = soup.find('table', {'class': 'table table-bordered table-striped'}).find('tbody')
+            for proxy in proxy_list.find_all('tr'):
+                alltd = proxy.find_all('td')
+                if alltd[0].string and alltd[1].string and alltd[3].string:
+                    ip_list.append('{}://{}:{}'.format(alltd[3].string.lower(), alltd[0].string, alltd[1].string.lower()))
+        logging.info('Crawled qydaili success, got crawled ip {}'.format(len(ip_list)))
         self.save_to_db(ip_list)
+
 
 def main():
     spiders = [cls() for cls in SpiderMeta.spiders]
@@ -143,3 +195,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # FineProxySpider().getip()
+    # QyProxySpider().getip()

@@ -1,7 +1,7 @@
 from flask import Flask
 
-from db import RedisClient
-from conf import REDIS_VALID_SET_NAME
+from Database.db import RedisClient
+from Config.conf import REDIS_VALID_SET_NAME
 
 app = Flask(__name__)
 rediscli = RedisClient(setname=REDIS_VALID_SET_NAME)
@@ -9,6 +9,10 @@ rediscli = RedisClient(setname=REDIS_VALID_SET_NAME)
 @app.route('/get', methods=['GET'])
 def getOne():
     return rediscli.get()
+
+@app.route('/getall', methods=['GET'])
+def getAll():
+    return ','.join(rediscli.get_all())
 
 @app.route('/count', methods=['GET'])
 def count():
