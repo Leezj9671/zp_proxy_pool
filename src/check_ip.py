@@ -3,28 +3,27 @@
 2. 一次性获取IP过多问题
 """
 
-
 import logging
+
 logging.basicConfig(level=logging.INFO, filename='./logs/IPfailed.log')
 
-from threading import Thread
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-from src.conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
-from src.db import RedisClient
+from conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
+from db import RedisClient
 
 
 class CheckIP():
 
     def __init__(self, from_db=REDIS_RAW_SET_NAME, to_db=REDIS_VALID_SET_NAME):
-        '''
+        """
         初始化IP检查地址和锚点IP
         :param from_db: 取出的数据库
         :param to_db: 验证后存储的数据库
-        '''
+        """
         self.check_url = CHECK_IP_ADD
         self.local_ip = None
         self.valid_redis_cli = RedisClient(to_db)
@@ -34,10 +33,10 @@ class CheckIP():
         self._update_local_ip()
 
     def _check_ip(self, curl):
-        '''
+        """
         检测ip可用性
         curl: 待检测的ip地址。
-        '''
+        """
         curl = curl.strip()
         curl_protocol = curl.split('://')[0]
         curl_link = curl.split('://')[1]
@@ -67,9 +66,9 @@ class CheckIP():
             self.wasted_proxy.append(curl)
 
     def _update_local_ip(self):
-        '''
+        """
         更新锚点IP
-        '''
+        """
         while True:
             try:
                 self.local_ip = requests.get(self.check_url).text
@@ -79,10 +78,10 @@ class CheckIP():
                 break
 
     def threads_check_ip(self, iplist=None, threads_num=CHECK_MAX_WORKERS):
-        '''
+        """
         启用多线程验证ip，移除无效代理
         iplist: <list> 待检查ip列表
-        '''
+        """
         self._update_local_ip()
         if not iplist:
             iplist = self.raw_redis_cli.get_all()
@@ -105,8 +104,14 @@ def valid_ip_process(from_db=REDIS_VALID_SET_NAME, to_db=REDIS_VALID_SET_NAME):
         start_time = time.perf_counter()
         check = CheckIP(from_db=from_db, to_db=to_db)
         check.threads_check_ip()
-        print('Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size, valid_db.size, time.perf_counter() - start_time))
-        logging.info('Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size, valid_db.size, time.perf_counter() - start_time))
+        print(
+            'Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size,
+                                                                                                         valid_db.size,
+                                                                                                         time.perf_counter() - start_time))
+        logging.info(
+            'Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size,
+                                                                                                         valid_db.size,
+                                                                                                         time.perf_counter() - start_time))
 
 
 def raw_ip_process(from_db=REDIS_RAW_SET_NAME, to_db=REDIS_VALID_SET_NAME):
@@ -120,12 +125,16 @@ def raw_ip_process(from_db=REDIS_RAW_SET_NAME, to_db=REDIS_VALID_SET_NAME):
         valid_db_size = valid_db.size
         check = CheckIP(from_db=from_db, to_db=to_db)
         check.threads_check_ip()
-        print('Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts before: {}, after: {}, used time: {:.4f} seconds'.format(raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
-        logging.info('Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts {}->{}, used time: {:.4f} seconds'.format(raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
+        print(
+            'Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts before: {}, after: {}, used time: {:.4f} seconds'.format(
+                raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
+        logging.info(
+            'Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts {}->{}, used time: {:.4f} seconds'.format(
+                raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
 
 
 if __name__ == '__main__':
-    #测试代码
+    # 测试代码
     # b = RedisClient(REDIS_RAW_SET_NAME)
     # c = RedisClient(REDIS_VALID_SET_NAME)
     # while True:
