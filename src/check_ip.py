@@ -13,8 +13,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-from Config.conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
-from Database.db import RedisClient
+from src.conf import CHECK_IP_ADD, REDIS_VALID_SET_NAME, REDIS_RAW_SET_NAME, REQUESTS_TIMEOUT, CHECK_MAX_WORKERS
+from src.db import RedisClient
 
 
 class CheckIP():

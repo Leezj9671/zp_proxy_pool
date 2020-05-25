@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from lxml import etree
 from fake_useragent import UserAgent
 
-from Database.db import RedisClient
+from src.db import RedisClient
 
 
 #Fake Useragent

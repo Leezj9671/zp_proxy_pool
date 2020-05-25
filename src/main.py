@@ -1,18 +1,20 @@
+import time
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+
 import logging
 logging.basicConfig(level=logging.INFO,
+                    handlers=[logging.FileHandler('test_{}.log'.format(strftime("%m%d"))), 
+                                            logging.StreamHandler()],
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                     datefmt='[%Y-%m-%d %H:%M:%S]',
                     filename='./logs/proxypool.log',
                     filemode='a')
 
-import time
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-
-from Proxy.proxypool import SpiderMeta
-from Databse.db import RedisClient
-from Proxy.validIP import CheckIP
-from Api.api import app
-from Config.conf import REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME
+from proxypool import SpiderMeta
+from db import RedisClient
+from check_ip import CheckIP
+from api import app
+from conf import REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME
 
 
 def crawl_ip_process(timewait=3600):
@@ -22,7 +24,6 @@ def crawl_ip_process(timewait=3600):
         with ThreadPoolExecutor(max_workers=len(spiders)) as executor:
             for spider in spiders:
                 executor.submit(spider.getip)
-        # print("Crawled IP in {:.4f} seconds".format(time.perf_counter() - start_time))
         logging.info("Crawl IP Process in {:.4f} seconds".format(time.perf_counter() - start_time))
         time.sleep(timewait)
 
@@ -37,7 +38,6 @@ def raw_ip_process(from_db=REDIS_RAW_SET_NAME, to_db=REDIS_VALID_SET_NAME, timew
             valid_db_size = valid_db.size
             check = CheckIP(from_db=from_db, to_db=to_db)
             check.threads_check_ip()
-            print('Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts before: {}, after: {}, used time: {:.4f} seconds'.format(raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
             logging.info('Checked raw IP proxy pool.Raw IP counts:{}, valid IP counts {}->{}, used time: {:.4f} seconds'.format(raw_db_size, valid_db_size, valid_db.size, time.perf_counter() - start_time))
         time.sleep(timewait)
 
@@ -49,7 +49,6 @@ def valid_ip_process(from_db=REDIS_VALID_SET_NAME, to_db=REDIS_VALID_SET_NAME, t
             start_time = time.perf_counter()
             check = CheckIP(from_db=from_db, to_db=to_db)
             check.threads_check_ip()
-            print('Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size, valid_db.size, time.perf_counter() - start_time))
             logging.info('Checked valid proxy pool. Valid IP counts before: {}->{}, used time: {:.4f} seconds'.format(valid_db_size, valid_db.size, time.perf_counter() - start_time))
         time.sleep(timewait)
 
@@ -60,7 +59,7 @@ def api_run():
 
 if __name__ == '__main__':
     with ProcessPoolExecutor(max_workers=4) as executor:
-        executor.submit(api_run)
+        # executor.submit(api_run)
         executor.submit(crawl_ip_process)
         executor.submit(raw_ip_process)
         executor.submit(valid_ip_process)

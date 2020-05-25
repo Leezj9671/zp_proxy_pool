@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO,
 
 import redis
 
-from Config.conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
+from src.conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
 
 
 class RedisClient():

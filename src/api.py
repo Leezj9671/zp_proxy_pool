@@ -1,7 +1,7 @@
 from flask import Flask
 
-from Database.db import RedisClient
-from Config.conf import REDIS_VALID_SET_NAME
+from src.db import RedisClient
+from src.conf import REDIS_VALID_SET_NAME
 
 app = Flask(__name__)
 rediscli = RedisClient(setname=REDIS_VALID_SET_NAME)
