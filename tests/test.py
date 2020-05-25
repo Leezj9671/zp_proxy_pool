@@ -3,10 +3,7 @@ import time
 import redis
 import requests
 import concurrent.futures
-import logging
-logging.basicConfig(handlers=[logging.FileHandler('test_{}.log'.format(time.strftime("%m%d"))), 
-                    logging.StreamHandler()],
-                    level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',)
+from utils import test_log
 
 rconn = redis.Redis(host='111.230.35.79',port=9733,db=0,password='JustForTTT666')
 RAW_DB_NAME = 'raw'
@@ -84,7 +81,7 @@ def get_proxy_process():
         rconn.delete(rdb)
         proxies_list = get_proxy_zdy()
         if proxies_list:
-            logging.info("Get {} proxies, total: {}".format(len(proxies_list), rconn.scard(rdb)))
+            test_log.info("Get {} proxies, total: {}".format(len(proxies_list), rconn.scard(rdb)))
             for proxy in proxies_list:
                 rconn.sadd(rdb, proxy)
         time.sleep(20)

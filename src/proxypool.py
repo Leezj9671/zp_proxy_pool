@@ -9,6 +9,7 @@ from lxml import etree
 from fake_useragent import UserAgent
 
 from db import RedisClient
+from utils import log
 
 ua = UserAgent()
 
@@ -22,7 +23,7 @@ class SpiderMeta(type):
 
     def __new__(cls, *args, **kwargs):
         if 'getip' not in args[2]:
-            logging.error('GetIP not in args, failed!')
+            log.error('GetIP not in args, failed!')
             return None
 
         args[2]['__init__'] = lambda self: SpiderMeta._init(self)
@@ -63,7 +64,7 @@ class Daili66Spider(metaclass=SpiderMeta):
                 alltd = proxy.find_all('td')
                 ip_list.append('http://{}:{}'.format(alltd[0].string, alltd[1].string))
                 ip_list.append('https://{}:{}'.format(alltd[0].string, alltd[1].string))
-        logging.info('Crawled 66daili success, got crawled ip {}'.format(len(ip_list)))
+        log.info('Crawled 66daili success, got crawled ip {}'.format(len(ip_list)))
         self.save_to_db(all_ip_list)
 
 
@@ -80,7 +81,7 @@ class KuaidailiSpider(metaclass=SpiderMeta):
             for proxy in proxy_list.find_all('tr'):
                 alltd = proxy.find_all('td')
                 ip_list.append('{}://{}:{}'.format(alltd[3].string.lower(), alltd[0].string, alltd[1].string.lower()))
-        logging.info('Crawled kuaidaili success, got crawled ip {}'.format(len(ip_list)))
+        log.info('Crawled kuaidaili success, got crawled ip {}'.format(len(ip_list)))
         self.save_to_db(ip_list)
 
 
@@ -99,12 +100,12 @@ class XiciSpider(metaclass=SpiderMeta):
             try:
                 alltr = soup.find(id="ip_list").findAll('tr')
             except:
-                logging.error('Can not get table: {}'.format(url))
+                log.error('Can not get table: {}'.format(url))
                 continue
             for tr in alltr[1:]:
                 alltd = tr.findAll('td')
                 ip_list.append('{}://{}:{}'.format(alltd[5].string.lower(), alltd[1].string, alltd[2].string))
-        logging.info('Crawled xicidaili success, got crawled ip {}'.format(len(ip_list)))
+        log.info('Crawled xicidaili success, got crawled ip {}'.format(len(ip_list)))
         self.save_to_db(ip_list)
 
 
@@ -127,7 +128,7 @@ class IP89Spider(metaclass=SpiderMeta):
             try:
                 text = requests.get(url, headers=headers, timeout=10).text
             except:
-                logging.error('89IP Can not get table: {}'.format(url))
+                log.error('89IP Can not get table: {}'.format(url))
                 return None
             all_ip = re.findall('(?<![\.\d])(?:\d{1,3}\.){3}\d{1,3}\:\d{1,5}', text)
             all_ip_list.extend(list(map(lambda ip: 'http://' + ip, all_ip)))
@@ -135,7 +136,7 @@ class IP89Spider(metaclass=SpiderMeta):
             all_ip_list.extend(list(map(lambda ip: 'socks5h://' + ip, all_ip)))
             time.sleep(3)
         # print(all_ip_list)
-        logging.info('Crawled 89daili success, got crawled ip {}'.format(len(all_ip_list)))
+        log.info('Crawled 89daili success, got crawled ip {}'.format(len(all_ip_list)))
         self.save_to_db(all_ip_list)
 
 
@@ -155,7 +156,7 @@ class FineProxySpider(metaclass=SpiderMeta):
         all_ip_list.extend(list(map(lambda ip: 'http://' + ip, all_ip)))
         all_ip_list.extend(list(map(lambda ip: 'https://' + ip, all_ip)))
         all_ip_list.extend(list(map(lambda ip: 'socks5h://' + ip, all_ip)))
-        logging.info('Crawled FineProxy success, got crawled ip {}'.format(len(all_ip_list)))
+        log.info('Crawled FineProxy success, got crawled ip {}'.format(len(all_ip_list)))
         self.save_to_db(all_ip_list)
 
 
@@ -174,7 +175,7 @@ class QyProxySpider(metaclass=SpiderMeta):
                 if alltd[0].string and alltd[1].string and alltd[3].string:
                     ip_list.append(
                         '{}://{}:{}'.format(alltd[3].string.lower(), alltd[0].string, alltd[1].string.lower()))
-        logging.info('Crawled qydaili success, got crawled ip {}'.format(len(ip_list)))
+        log.info('Crawled qydaili success, got crawled ip {}'.format(len(ip_list)))
         self.save_to_db(ip_list)
 
 

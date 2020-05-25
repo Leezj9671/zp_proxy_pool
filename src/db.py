@@ -1,13 +1,7 @@
-import logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='[%Y-%m-%d %H:%M:%S]',
-                    filename='./logs/redis_logger.log',
-                    filemode='a')
-
 import redis
 
 from src.conf import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM, REDIS_RAW_SET_NAME, REDIS_VALID_SET_NAME, REDIS_PASSWORD
+from utils import log
 
 
 class RedisClient():
@@ -48,7 +42,7 @@ class RedisClient():
             else:
                 raise "ip is wrong type"
         except Exception as e:
-            logging.error('IP {} save failed: {}'.format(ip, e))
+            log.error('IP {} save failed: {}'.format(ip, e))
 
     def remove(self, ip):
         """
@@ -62,7 +56,7 @@ class RedisClient():
             else:
                 raise "ip is wrong type"
         except Exception as e:
-            logging.error('IP {} remove failed: {}'.format(ip, e))
+            log.error('IP {} remove failed: {}'.format(ip, e))
 
     def pop(self):
         """
