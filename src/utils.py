@@ -3,7 +3,7 @@ import os
 from logging import handlers
 
 
-def _logging(log_name, log_path='./logs/', log_level=logging.INFO):
+def _logging(log_name, log_path='../data/logs/', log_level=logging.INFO):
     """日志模块"""
     line_format = '%(asctime)s [%(levelname)s] [%(threadName)s] [%(module)s] %(message)s'
     log_format = logging.Formatter(line_format)
